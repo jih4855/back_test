@@ -36,6 +36,63 @@ console.log(`프로토콜: ${window.location.protocol}`);
 console.log(`API 서버: ${API_BASE_URL}`);
 console.log(`폴백 방법 사용: ${USE_FALLBACK_METHOD}`);
 
+// Mixed Content 경고 메시지 표시 (더 간단하게)
+function showSimpleMixedContentGuide() {
+    // 기존 경고가 있으면 제거
+    const existing = document.getElementById('mixed-content-guide');
+    if (existing) existing.remove();
+    
+    const guideDiv = document.createElement('div');
+    guideDiv.id = 'mixed-content-guide';
+    guideDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #2196F3;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 350px;
+        font-family: monospace;
+        font-size: 14px;
+    `;
+    
+    guideDiv.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h4 style="margin: 0 0 8px 0;">🔧 API 연결 설정</h4>
+                <p style="margin: 0 0 8px 0; font-size: 13px;">
+                    주소창 🔒 → 사이트 설정 → 안전하지 않은 콘텐츠 → <strong>허용</strong>
+                </p>
+                <p style="margin: 0; font-size: 12px; opacity: 0.9;">
+                    이 사이트에서만 적용됩니다.
+                </p>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="
+                background: rgba(255,255,255,0.2); 
+                border: none; 
+                color: white; 
+                padding: 4px 8px; 
+                border-radius: 4px; 
+                cursor: pointer;
+                font-size: 16px;
+                margin-left: 10px;
+            ">×</button>
+        </div>
+    `;
+    
+    document.body.appendChild(guideDiv);
+    
+    // 30초 후 자동 사라짐
+    setTimeout(() => {
+        if (document.getElementById('mixed-content-guide')) {
+            guideDiv.remove();
+        }
+    }, 30000);
+}
+
 // Mixed Content 문제 해결을 위한 fetch 래퍼 함수
 async function safeFetch(url, options = {}) {
     try {
@@ -171,14 +228,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // 현재 포지션 조회
     async function fetchCurrentPositions() {
         try {
-            const response = await safeFetch(`${API_BASE_URL}/positions`);
+            const response = await fetch(`${API_BASE_URL}/positions`, {
+                mode: 'cors'
+            });
             if (!response.ok) throw new Error('포지션 조회 실패');
             const data = await response.json();
             updateCurrentPositions(data.accounts);
             positionUpdatedDiv.textContent = `마지막 업데이트: ${formatTime()}`;
+            
+            // 첫 성공 시 가이드 제거
+            const guide = document.getElementById('mixed-content-guide');
+            if (guide) guide.remove();
+            
         } catch (error) {
             console.error('포지션 조회 실패:', error);
             currentPositionsDiv.innerHTML = '<p>포지션 정보를 불러오는 중 오류가 발생했습니다.</p>';
+            
+            // Mixed Content 오류 시 가이드 표시
+            if (error.message.includes('Failed to fetch') && isHTTPS) {
+                showSimpleMixedContentGuide();
+            }
         }
     }
 
@@ -225,7 +294,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 거래 내역 조회
     async function fetchTradeHistory() {
         try {
-            const response = await safeFetch(`${API_BASE_URL}/daily-report`);
+            const response = await fetch(`${API_BASE_URL}/daily-report`, {
+                mode: 'cors'
+            });
             if (!response.ok) throw new Error('거래 내역 조회 실패');
             const data = await response.json();
 
