@@ -3,8 +3,9 @@
 const API_CONFIGS = {
     development: 'http://127.0.0.1:8000',
     development2: 'http://localhost:8000',  // 로컬 테스트용
-    production: 'http://223.130.129.204:8000',  // HTTP 서버
-    production_https: 'https://223.130.129.204:8000',  // HTTPS 시도용
+    production: 'https://223.130.129.204:8443',  // HTTPS 서버 (포트 8443)
+    production_fallback: 'http://223.130.129.204:8000',  // HTTP 폴백용
+    production_https: 'https://223.130.129.204:8443',  // HTTPS 시도용
     cors_proxy: 'https://cors-anywhere.herokuapp.com/http://223.130.129.204:8000',  // CORS 프록시
     jsonp_fallback: 'http://223.130.129.204:8000'  // JSONP 폴백용
 };
@@ -16,15 +17,15 @@ const isDevelopment = window.location.hostname === 'localhost' ||
                      window.location.hostname.includes('localhost');
 const isHTTPS = window.location.protocol === 'https:';
 
-// 환경별 API URL 결정 - Mixed Content 해결 우선순위
+// 환경별 API URL 결정 - HTTPS 우선 시도
 let API_BASE_URL;
 let USE_FALLBACK_METHOD = false;
 
 if (isGitHubPages && isHTTPS) {
-    // GitHub Pages HTTPS 환경 - Mixed Content 문제 해결 시도
-    console.warn('🔒 HTTPS 환경에서 HTTP API 접근 시도');
-    API_BASE_URL = API_CONFIGS.production;  // 일단 HTTP로 시도
-    USE_FALLBACK_METHOD = true;  // 실패 시 대안 방법 사용
+    // GitHub Pages HTTPS 환경 - HTTPS API 서버 사용
+    console.log('🔒 GitHub Pages HTTPS 환경 - HTTPS API 서버 연결 시도');
+    API_BASE_URL = API_CONFIGS.production;  // HTTPS 서버로 연결
+    USE_FALLBACK_METHOD = true;  // 실패 시 HTTP 폴백
 } else if (isDevelopment) {
     API_BASE_URL = API_CONFIGS.development;
 } else {
@@ -35,6 +36,111 @@ console.log(`현재 환경: ${isGitHubPages ? 'GitHub Pages' : (isDevelopment ? 
 console.log(`프로토콜: ${window.location.protocol}`);
 console.log(`API 서버: ${API_BASE_URL}`);
 console.log(`폴백 방법 사용: ${USE_FALLBACK_METHOD}`);
+
+// HTTPS 연결 실패 시 HTTP 폴백 함수
+async function fetchWithFallback(url, options = {}) {
+    try {
+        // 첫 번째 시도: HTTPS
+        console.log(`🔒 HTTPS 연결 시도: ${url}`);
+        const response = await fetch(url, {
+            ...options,
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        console.log('✅ HTTPS 연결 성공');
+        return response;
+        
+    } catch (error) {
+        console.warn(`HTTPS 연결 실패: ${error.message}`);
+        
+        if (USE_FALLBACK_METHOD && isHTTPS) {
+            console.log('🔄 HTTP 폴백 연결 시도...');
+            
+            try {
+                // HTTP 폴백 URL 생성
+                const fallbackUrl = url.replace(API_CONFIGS.production, API_CONFIGS.production_fallback);
+                console.log(`📡 HTTP 폴백: ${fallbackUrl}`);
+                
+                const fallbackResponse = await fetch(fallbackUrl, {
+                    ...options,
+                    mode: 'cors'
+                });
+                
+                if (!fallbackResponse.ok) {
+                    throw new Error(`HTTP ${fallbackResponse.status}: ${fallbackResponse.statusText}`);
+                }
+                
+                console.log('✅ HTTP 폴백 연결 성공');
+                showHttpFallbackNotice();
+                return fallbackResponse;
+                
+            } catch (fallbackError) {
+                console.error('❌ 모든 연결 방법 실패:', fallbackError.message);
+                showConnectionError();
+                throw fallbackError;
+            }
+        }
+        
+        throw error;
+    }
+}
+
+// HTTP 폴백 사용 알림
+function showHttpFallbackNotice() {
+    const noticeDiv = document.createElement('div');
+    noticeDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ff9800;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 12px;
+        z-index: 10000;
+    `;
+    noticeDiv.innerHTML = '⚠️ HTTPS 실패, HTTP 연결 사용 중';
+    document.body.appendChild(noticeDiv);
+    
+    setTimeout(() => noticeDiv.remove(), 5000);
+}
+
+// 연결 오류 표시
+function showConnectionError() {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #f44336;
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: monospace;
+        text-align: center;
+        z-index: 10000;
+    `;
+    errorDiv.innerHTML = `
+        <h3>🚫 서버 연결 실패</h3>
+        <p>API 서버에 연결할 수 없습니다.</p>
+        <button onclick="window.location.reload()" style="
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        ">새로고침</button>
+    `;
+    document.body.appendChild(errorDiv);
+}
 
 // Mixed Content 경고 메시지 표시 (더 간단하게)
 function showSimpleMixedContentGuide() {
