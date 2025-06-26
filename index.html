@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>암호화폐 자동매매 대시보드</title>
+    <style>
+        /* 다크모드 최소 CSS */
+        body { 
+            font-family: monospace; 
+            margin: 20px; 
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        h1 { color: #fff; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        h2 { color: #ccc; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        h3 { color: #bbb; }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0;
+            background: #222;
+        }
+        th, td { 
+            border: 1px solid #444; 
+            padding: 8px; 
+            text-align: center; 
+        }
+        th { background: #333; color: #fff; }
+        
+        .account-header-row {
+            background: #2a2a2a;
+            font-weight: bold;
+            text-align: left;
+            color: #fff;
+        }
+        .pnl-positive { color: #4caf50; font-weight: bold; }
+        .pnl-negative { color: #f44336; font-weight: bold; }
+        
+        .position-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 15px; 
+            margin: 15px 0; 
+        }
+        .account-card { 
+            border: 1px solid #444; 
+            padding: 15px; 
+            background: #222;
+        }
+        .position-item { 
+            margin: 8px 0; 
+            padding: 10px; 
+            background: #2a2a2a;
+            border-left: 3px solid #4caf50;
+        }
+        .position-item.short { border-left-color: #f44336; }
+        .no-position { 
+            text-align: center; 
+            color: #888; 
+            border-left-color: #666;
+        }
+        
+        .info-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 10px; 
+            margin: 15px 0;
+        }
+        .info-card { 
+            background: #222; 
+            padding: 10px; 
+            border-left: 3px solid #666; 
+        }
+        
+        .last-updated {
+            text-align: right;
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>암호화폐 자동매매 대시보드</h1>
+    <p>OKX API - SOL-USDT 선물거래 모니터링</p>
+
+    <h2>시스템 정보</h2>
+    <div class="info-grid">
+        <div class="info-card">
+            <strong>거래소</strong><br>OKX 선물
+        </div>
+        <div class="info-card">
+            <strong>상품</strong><br>SOL-USDT-SWAP
+        </div>
+        <div class="info-card">
+            <strong>전략</strong><br>통계를 기반한 자동매매
+        </div>
+        <div class="info-card">
+            <strong>갱신</strong><br>실시간 5초
+        </div>
+    </div>
+
+    <h2>현재 포지션</h2>
+    <div id="current-positions">데이터 로딩중...</div>
+    <div class="last-updated" id="position-updated"></div>
+
+    <h2>거래 내역 (24시간)</h2>
+    <table id="trade-history-table">
+        <thead>
+            <tr>
+                <th>시간</th>
+                <th>종목</th>
+                <th>방향</th>
+                <th>레버리지</th>
+                <th>수익률%</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <div class="last-updated" id="trades-updated"></div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+/* No CSS Club Style - Keep it minimal */
+
+body {
+    font-family: monospace; /* Monospaced font for a classic terminal look */
+    margin: 20px;
+    background-color: #f4f4f4; /* Light gray background */
+    color: #333; /* Dark gray text */
+}
+
+header, section, footer {
+    margin-bottom: 20px;
+}
+
+h1, h2 {
+    margin-top: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse; /* Remove double borders */
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ccc; /* Light gray border for table cells */
+    padding: 8px;
+    text-align: left;
+}
+
+thead {
+    background-color: #e0e0e0; /* Slightly darker gray for table header */
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 20px 0;
+}
+
+#current-positions p,
+#trade-history tbody tr:empty { /* Style for loading messages or empty states */
+    font-style: italic;
+    color: #777;
+}
+
+/* Basic link styling if any links are added */
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+/* 계정 구분용 테이블 행 */
+.account-header-row td {
+    background-color: #dcdcdc;
+    font-weight: bold;
+    font-family: monospace;
+    color: #222;
+}
+
+/* 손익 색상 강조 */
+.pnl-positive {
+    color: #008000; /* 진녹색 */
+    font-weight: bold;
+}
+.pnl-negative {
+    color: #cc0000; /* 붉은색 */
+    font-weight: bold;
+}
+
+/* 현재 포지션 영역 개선 */
+#current-positions ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+#current-positions li {
+    margin-bottom: 12px;
+    background: #fff;
+    padding: 10px;
+    border-left: 4px solid #999;
+    border-radius: 4px;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.05);
+}
+#current-positions h3 {
+    margin-bottom: 10px;
+}
+
+/* 모바일 대응 살짝 */
+@media screen and (max-width: 768px) {
+    table, thead, tbody, th, td, tr {
+        font-size: 13px;
+    }
+    h1, h2 {
+        font-size: 18px;
+    }
+}
