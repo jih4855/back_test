@@ -4,8 +4,9 @@ const API_CONFIGS = {
     development: 'http://127.0.0.1:8000',
     development2: 'http://localhost:8000',  // 로컬 테스트용
     production: 'http://223.130.129.204:8000',  // HTTP 서버
+    production_https: 'https://223.130.129.204:8000',  // HTTPS 시도용
     cors_proxy: 'https://cors-anywhere.herokuapp.com/http://223.130.129.204:8000',  // CORS 프록시
-    local_http: 'http://223.130.129.204:8000'  // 로컬 HTTP 서버용
+    jsonp_fallback: 'http://223.130.129.204:8000'  // JSONP 폴백용
 };
 
 // 현재 환경 감지 - GitHub Pages 감지 로직 개선
@@ -13,27 +14,108 @@ const isGitHubPages = window.location.hostname.includes('github.io');
 const isDevelopment = window.location.hostname === 'localhost' || 
                      window.location.hostname === '127.0.0.1' ||
                      window.location.hostname.includes('localhost');
-const isLocalHttp = window.location.protocol === 'http:' && isDevelopment;
+const isHTTPS = window.location.protocol === 'https:';
 
-// 환경별 API URL 결정
+// 환경별 API URL 결정 - Mixed Content 해결 우선순위
 let API_BASE_URL;
-if (isLocalHttp) {
-    API_BASE_URL = API_CONFIGS.local_http;  // 로컬 HTTP 테스트
-} else if (isGitHubPages) {
-    API_BASE_URL = API_CONFIGS.production;  // GitHub Pages (Mixed Content 경고 무시)
+let USE_FALLBACK_METHOD = false;
+
+if (isGitHubPages && isHTTPS) {
+    // GitHub Pages HTTPS 환경 - Mixed Content 문제 해결 시도
+    console.warn('🔒 HTTPS 환경에서 HTTP API 접근 시도');
+    API_BASE_URL = API_CONFIGS.production;  // 일단 HTTP로 시도
+    USE_FALLBACK_METHOD = true;  // 실패 시 대안 방법 사용
+} else if (isDevelopment) {
+    API_BASE_URL = API_CONFIGS.development;
 } else {
-    API_BASE_URL = API_CONFIGS.development;  // 일반 로컬 개발
+    API_BASE_URL = API_CONFIGS.production;
 }
 
 console.log(`현재 환경: ${isGitHubPages ? 'GitHub Pages' : (isDevelopment ? 'Development' : 'Production')}`);
 console.log(`프로토콜: ${window.location.protocol}`);
 console.log(`API 서버: ${API_BASE_URL}`);
-console.log(`현재 호스트: ${window.location.hostname}`);
+console.log(`폴백 방법 사용: ${USE_FALLBACK_METHOD}`);
 
-// Mixed Content 경고 무시를 위한 설정
-if (isGitHubPages) {
-    console.warn('⚠️ GitHub Pages HTTPS에서 HTTP API 호출: Mixed Content 경고가 발생할 수 있습니다.');
-    console.info('💡 브라우저에서 "안전하지 않은 콘텐츠 허용" 설정이 필요할 수 있습니다.');
+// Mixed Content 문제 해결을 위한 fetch 래퍼 함수
+async function safeFetch(url, options = {}) {
+    try {
+        // 첫 번째 시도: 일반 fetch
+        const response = await fetch(url, {
+            ...options,
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response;
+    } catch (error) {
+        console.warn(`직접 fetch 실패: ${error.message}`);
+        
+        if (USE_FALLBACK_METHOD && isHTTPS) {
+            console.log('🔄 대안 방법 시도 중...');
+            
+            try {
+                // 방법 1: 서버에 직접 요청 (브라우저 설정 필요)
+                console.log('💡 브라우저에서 "안전하지 않은 콘텐츠 허용" 설정을 활성화해주세요.');
+                console.log('Chrome: 주소창 자물쇠 → 사이트 설정 → 안전하지 않은 콘텐츠 → 허용');
+                console.log('Firefox: 주소창 방패 아이콘 → 보호 기능 사용 안함');
+                
+                // 사용자에게 Mixed Content 해결 안내
+                showMixedContentWarning();
+                
+                throw new Error('Mixed Content 차단 - 브라우저 설정 필요');
+                
+            } catch (fallbackError) {
+                console.error('모든 연결 방법 실패:', fallbackError.message);
+                throw fallbackError;
+            }
+        }
+        
+        throw error;
+    }
+}
+
+// Mixed Content 경고 메시지 표시
+function showMixedContentWarning() {
+    const warningDiv = document.createElement('div');
+    warningDiv.id = 'mixed-content-warning';
+    warningDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ff6b6b;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 600px;
+        text-align: center;
+        font-family: monospace;
+    `;
+    
+    warningDiv.innerHTML = `
+        <h4 style="margin: 0 0 10px 0;">🔒 API 연결 차단됨</h4>
+        <p style="margin: 0 0 10px 0;">HTTPS 사이트에서 HTTP API 호출이 차단되었습니다.</p>
+        <p style="margin: 0; font-size: 0.9em;">
+            <strong>해결 방법:</strong> 
+            주소창 왼쪽 자물쇠 아이콘 → "사이트 설정" → "안전하지 않은 콘텐츠" → "허용"
+        </p>
+        <button onclick="this.parentElement.remove()" style="
+            margin-top: 10px; 
+            background: rgba(255,255,255,0.2); 
+            border: 1px solid white; 
+            color: white; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            cursor: pointer;
+        ">닫기</button>
+    `;
+    
+    document.body.appendChild(warningDiv);
 }
 
 // 서버 연결 테스트 함수
@@ -89,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 현재 포지션 조회
     async function fetchCurrentPositions() {
         try {
-            const response = await fetch(`${API_BASE_URL}/positions`);
+            const response = await safeFetch(`${API_BASE_URL}/positions`);
             if (!response.ok) throw new Error('포지션 조회 실패');
             const data = await response.json();
             updateCurrentPositions(data.accounts);
@@ -143,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 거래 내역 조회
     async function fetchTradeHistory() {
         try {
-            const response = await fetch(`${API_BASE_URL}/daily-report`);
+            const response = await safeFetch(`${API_BASE_URL}/daily-report`);
             if (!response.ok) throw new Error('거래 내역 조회 실패');
             const data = await response.json();
 
