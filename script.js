@@ -1,25 +1,72 @@
 // 암호화폐 자동매매 대시보드 JavaScript
-// 환경별 API 서버 주소 설정 (같은 서버에서 동작)
+// 환경별 API 서버 주소 설정
 const API_CONFIGS = {
     development: 'http://127.0.0.1:8000',
     development2: 'http://localhost:8000',  // 로컬 테스트용
-    production: 'http://223.130.129.204:8000'  // 네이버 서버 (같은 서버)
-
+    production: 'http://223.130.129.204:8000',  // HTTP 서버
+    cors_proxy: 'https://cors-anywhere.herokuapp.com/http://223.130.129.204:8000',  // CORS 프록시
+    local_http: 'http://223.130.129.204:8000'  // 로컬 HTTP 서버용
 };
 
-// 현재 환경 감지
+// 현재 환경 감지 - GitHub Pages 감지 로직 개선
+const isGitHubPages = window.location.hostname.includes('github.io');
 const isDevelopment = window.location.hostname === 'localhost' || 
                      window.location.hostname === '127.0.0.1' ||
-                     window.location.hostname.includes('localhost') ||
-                     window.location.hostname === 'localhost:8000' ||
-                     window.location.hostname === 'localhost:8000'; 
+                     window.location.hostname.includes('localhost');
+const isLocalHttp = window.location.protocol === 'http:' && isDevelopment;
 
-// 같은 서버에서 동작하는 경우 상대 경로 사용 가능
-const API_BASE_URL = isDevelopment ? API_CONFIGS.development : API_CONFIGS.production;
+// 환경별 API URL 결정
+let API_BASE_URL;
+if (isLocalHttp) {
+    API_BASE_URL = API_CONFIGS.local_http;  // 로컬 HTTP 테스트
+} else if (isGitHubPages) {
+    API_BASE_URL = API_CONFIGS.production;  // GitHub Pages (Mixed Content 경고 무시)
+} else {
+    API_BASE_URL = API_CONFIGS.development;  // 일반 로컬 개발
+}
 
+console.log(`현재 환경: ${isGitHubPages ? 'GitHub Pages' : (isDevelopment ? 'Development' : 'Production')}`);
+console.log(`프로토콜: ${window.location.protocol}`);
+console.log(`API 서버: ${API_BASE_URL}`);
+console.log(`현재 호스트: ${window.location.hostname}`);
 
-console.log(`현재 환경: ${isDevelopment ? 'Development' : 'Production'}`);
-console.log(`API 서버: ${API_BASE_URL || 'Same Server (Relative Path)'}`);
+// Mixed Content 경고 무시를 위한 설정
+if (isGitHubPages) {
+    console.warn('⚠️ GitHub Pages HTTPS에서 HTTP API 호출: Mixed Content 경고가 발생할 수 있습니다.');
+    console.info('💡 브라우저에서 "안전하지 않은 콘텐츠 허용" 설정이 필요할 수 있습니다.');
+}
+
+// 서버 연결 테스트 함수
+async function testServerConnection() {
+    try {
+        console.log('서버 연결 테스트 시작...');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5초 타임아웃
+        
+        const response = await fetch(`${API_BASE_URL}/`, {
+            method: 'GET',
+            mode: 'cors',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('서버 응답:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ 서버 연결 성공:', data);
+        return true;
+    } catch (error) {
+        console.error('❌ 서버 연결 실패:', error.name, error.message);
+        if (error.name === 'AbortError') {
+            console.error('⏰ 연결 타임아웃 (5초)');
+        }
+        return false;
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const tradeHistoryTableBody = document.querySelector('#trade-history-table tbody');
