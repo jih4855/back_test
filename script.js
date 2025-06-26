@@ -159,22 +159,16 @@ async function unifiedFetch(url, options = {}) {
     }
     
     // 실제 API 호출
-    try {
-        const response = await fetch(url, {
-            ...options,
-            mode: 'cors'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        return response;
-    } catch (error) {
-        console.error('실제 API 호출 실패, 데모 모드로 전환:', error.message);
-        showAPIFallbackNotice();
-        return await demoFetch(url);
+    const response = await fetch(url, {
+        ...options,
+        mode: 'cors'
+    });
+    
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+    
+    return response;
 }
 
 // CORS 프록시를 통한 fetch
