@@ -286,7 +286,7 @@ async function testServerConnection() {
     try {
         console.log('서버 연결 테스트 시작...');
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5초 타임아웃
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 5초 타임아웃
         
         const response = await fetch(`${API_BASE_URL}/`, {
             method: 'GET',
@@ -307,7 +307,7 @@ async function testServerConnection() {
     } catch (error) {
         console.error('❌ 서버 연결 실패:', error.name, error.message);
         if (error.name === 'AbortError') {
-            console.error('⏰ 연결 타임아웃 (5초)');
+            console.error('⏰ 연결 타임아웃 (60초)');
         }
         return false;
     }
