@@ -303,6 +303,79 @@ function showDemoModeIndicator() {
     }
 }
 
+// Mixed Content 경고 메시지 표시
+function showMixedContentWarning() {
+    const warningDiv = document.createElement('div');
+    warningDiv.id = 'mixed-content-warning';
+    warningDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ff6b6b;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 600px;
+        text-align: center;
+        font-family: monospace;
+    `;
+    
+    warningDiv.innerHTML = `
+        <h4 style="margin: 0 0 10px 0;">🔒 API 연결 차단됨</h4>
+        <p style="margin: 0 0 10px 0;">HTTPS 사이트에서 HTTP API 호출이 차단되었습니다.</p>
+        <p style="margin: 0; font-size: 0.9em;">
+            <strong>해결 방법:</strong> 
+            주소창 왼쪽 자물쇠 아이콘 → "사이트 설정" → "안전하지 않은 콘텐츠" → "허용"
+        </p>
+        <button onclick="this.parentElement.remove()" style="
+            margin-top: 10px; 
+            background: rgba(255,255,255,0.2); 
+            border: 1px solid white; 
+            color: white; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            cursor: pointer;
+        ">닫기</button>
+    `;
+    
+    document.body.appendChild(warningDiv);
+}
+
+// 서버 연결 테스트 함수
+async function testServerConnection() {
+    try {
+        console.log('서버 연결 테스트 시작...');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초 타임아웃
+        
+        const response = await fetch(`${API_BASE_URL}/`, {
+            method: 'GET',
+            mode: 'cors',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('서버 응답:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ 서버 연결 성공:', data);
+        return true;
+    } catch (error) {
+        console.error('❌ 서버 연결 실패:', error.name, error.message);
+        if (error.name === 'AbortError') {
+            console.error('⏰ 연결 타임아웃 (60초)');
+        }
+        return false;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 데모 모드 표시
     showDemoModeIndicator();
