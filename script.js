@@ -1,13 +1,13 @@
 // 암호화폐 자동매매 대시보드 JavaScript
 // 환경별 API 서버 주소 설정
 const API_CONFIGS = {
-    development: 'http://127.0.0.1:8000',
-    development2: 'http://localhost:8000',  // 로컬 테스트용
-    production: 'http://223.130.129.204:8000',  // 다시 HTTP로 변경
-    cors_proxy: 'https://cors-anywhere.herokuapp.com/http://223.130.129.204:8000',  // CORS 프록시 (403 에러 발생중)
-    allorigins_proxy: 'https://api.allorigins.win/raw?url=http://223.130.129.204:8000',  // 대안 프록시
-    corsproxy_io: 'https://corsproxy.io/?http://223.130.129.204:8000',  // 다른 CORS 프록시
-    thingproxy: 'https://thingproxy.freeboard.io/fetch/http://223.130.129.204:8000',  // 또 다른 프록시
+    development: 'http://127.0.0.1:8080',
+    development2: 'http://localhost:8080',  // 로컬 테스트용
+    production: 'http://223.130.129.204:8080',  // 실제 서버 포트 8080으로 수정!
+    cors_proxy: 'https://cors-anywhere.herokuapp.com/http://223.130.129.204:8080',  // CORS 프록시
+    allorigins_proxy: 'https://api.allorigins.win/raw?url=http://223.130.129.204:8080',  // 대안 프록시
+    corsproxy_io: 'https://corsproxy.io/?http://223.130.129.204:8080',  // 다른 CORS 프록시
+    thingproxy: 'https://thingproxy.freeboard.io/fetch/http://223.130.129.204:8080',  // 또 다른 프록시
     demo: 'demo'  // 데모 모드
 };
 
@@ -320,7 +320,7 @@ function showProxyFailureNotice() {
         <p style="margin: 0; font-size: 12px;">
             <strong>해결방법:</strong> 
             1) FastAPI 서버에 CORS 설정 추가 
-            2) 서버가 실행 중인지 확인 (223.130.129.204:8000)
+            2) 서버가 실행 중인지 확인 (223.130.129.204:8080)
         </p>
         <button onclick="this.parentElement.remove()" style="
             margin-top: 10px; 
