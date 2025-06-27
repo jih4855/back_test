@@ -185,7 +185,49 @@ async function unifiedFetch(url, options = {}) {
             console.log('🔄 프록시를 통한 HTTP 서버 연결로 전환...');
             
             // HTTPS 실패시 프록시를 통한 HTTP 연결 시도
-            return await proxyFetch(url.replace('https://223.130.129.204:8443', 'http://223.130.129.204:8080'), options);
+            const httpUrl = url.replace('https://223.130.129.204:8443', 'http://223.130.129.204:8080');
+            
+            // 프록시 서비스들을 직접 시도
+            const proxyServices = [
+                {
+                    name: 'AllOrigins',
+                    getUrl: (targetUrl) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+                },
+                {
+                    name: 'CorsProxy.io', 
+                    getUrl: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+                },
+                {
+                    name: 'ThingProxy',
+                    getUrl: (targetUrl) => `https://thingproxy.freeboard.io/fetch/${targetUrl}`
+                }
+            ];
+            
+            for (const proxy of proxyServices) {
+                try {
+                    const proxyUrl = proxy.getUrl(httpUrl);
+                    console.log(`🌐 ${proxy.name} 프록시 시도: ${proxyUrl}`);
+                    
+                    const proxyResponse = await fetch(proxyUrl, {
+                        ...options,
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+                    
+                    if (proxyResponse.ok) {
+                        console.log(`✅ ${proxy.name} 프록시 성공!`);
+                        return proxyResponse;
+                    }
+                } catch (proxyError) {
+                    console.warn(`❌ ${proxy.name} 실패: ${proxyError.message}`);
+                    continue;
+                }
+            }
+            
+            // 모든 프록시 실패시 데모 모드
+            console.log('🎭 모든 연결 실패 - 데모 모드로 전환');
+            showProxyFailureNotice();
+            return await demoFetch(url);
         }
     }
     
@@ -233,14 +275,14 @@ async function proxyFetch(url, options = {}) {
         }
     ];
     
-    // 전체 URL 구성
+    // 전체 URL 구성 - HTTP 서버로 강제 변경 (프록시용)
     let targetUrl = url;
     if (url.includes('/positions')) {
-        targetUrl = `${API_BASE_URL}/positions`;
+        targetUrl = `http://223.130.129.204:8080/positions`;
     } else if (url.includes('/daily-report')) {
-        targetUrl = `${API_BASE_URL}/daily-report`;
+        targetUrl = `http://223.130.129.204:8080/daily-report`;
     } else {
-        targetUrl = `${API_BASE_URL}/`;
+        targetUrl = `http://223.130.129.204:8080/`;
     }
     
     console.log(`🎯 타겟 FastAPI 서버: ${targetUrl}`);
