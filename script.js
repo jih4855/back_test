@@ -3,7 +3,8 @@
 const API_CONFIGS = {
     development: 'http://127.0.0.1:8080',
     development2: 'http://localhost:8080',  // 로컬 테스트용
-    production: 'http://223.130.129.204:8080',  // 실제 서버 포트 8080으로 수정!
+    production: 'http://223.130.129.204:8080',  // HTTP 서버
+    production_https: 'https://223.130.129.204:8443',  // HTTPS 서버 (8443 포트에서 실행 중인 것 같음)
     cors_proxy: 'https://cors-anywhere.herokuapp.com/http://223.130.129.204:8080',  // CORS 프록시
     allorigins_proxy: 'https://api.allorigins.win/raw?url=http://223.130.129.204:8080',  // 대안 프록시
     corsproxy_io: 'https://corsproxy.io/?http://223.130.129.204:8080',  // 다른 CORS 프록시
@@ -160,7 +161,12 @@ async function unifiedFetch(url, options = {}) {
         return await demoFetch(url);
     }
     
-    // 실제 API 호출
+    // GitHub Pages HTTPS 환경에서는 프록시 사용 필수
+    if (USE_PROXY) {
+        return await proxyFetch(url, options);
+    }
+    
+    // 로컬 개발 환경에서만 직접 호출
     const response = await fetch(url, {
         ...options,
         mode: 'cors'
@@ -249,8 +255,28 @@ async function proxyFetch(url, options = {}) {
     // 모든 프록시 실패
     console.error('🚫 모든 프록시 서비스 실패 - FastAPI 서버 연결 불가');
     
-    // FastAPI 서버 직접 연결 마지막 시도 (Mixed Content 경고 발생하지만 시도)
-    console.log('🔄 FastAPI 서버 직접 연결 마지막 시도...');
+    // HTTPS 서버 직접 연결 시도 (8443 포트)
+    console.log('🔐 HTTPS FastAPI 서버 연결 시도 (8443 포트)...');
+    try {
+        let httpsUrl = targetUrl.replace('http://223.130.129.204:8080', 'https://223.130.129.204:8443');
+        console.log(`🌐 HTTPS URL: ${httpsUrl}`);
+        
+        const httpsResponse = await fetch(httpsUrl, {
+            ...options,
+            method: 'GET',
+            mode: 'cors'
+        });
+        
+        if (httpsResponse.ok) {
+            console.log('✅ HTTPS FastAPI 서버 직접 연결 성공!');
+            return httpsResponse;
+        }
+    } catch (httpsError) {
+        console.warn(`❌ HTTPS 연결 실패: ${httpsError.message}`);
+    }
+    
+    // HTTP 서버 직접 연결 시도 (Mixed Content 경고 발생)
+    console.log('🔄 HTTP FastAPI 서버 직접 연결 시도 (Mixed Content 경고 예상)...');
     try {
         const directResponse = await fetch(targetUrl, {
             ...options,
@@ -259,11 +285,11 @@ async function proxyFetch(url, options = {}) {
         });
         
         if (directResponse.ok) {
-            console.log('✅ FastAPI 서버 직접 연결 성공!');
+            console.log('✅ HTTP FastAPI 서버 직접 연결 성공!');
             return directResponse;
         }
     } catch (directError) {
-        console.warn(`❌ 직접 연결 실패: ${directError.message}`);
+        console.warn(`❌ HTTP 직접 연결 실패: ${directError.message}`);
     }
     
     // 최종적으로 데모 모드로 전환
