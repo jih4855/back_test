@@ -25,17 +25,17 @@ let USE_PROXY = false;
 let USE_DEMO_MODE = false;
 
 if (isGitHubPages && isHTTPS) {
-    // GitHub Pages HTTPS 환경 - 다양한 프록시 시도
-    console.log('🌐 GitHub Pages HTTPS 환경 - 프록시를 통해 FastAPI 서버 연결 시도');
-    API_BASE_URL = API_CONFIGS.production; // 직접 API 서버 주소 사용
-    USE_PROXY = true;
+    // GitHub Pages HTTPS 환경 - HTTPS API 서버 직접 연결 시도
+    console.log('🔐 GitHub Pages HTTPS 환경 - HTTPS FastAPI 서버 직접 연결');
+    API_BASE_URL = API_CONFIGS.production_https; // 8443 HTTPS 서버 사용
+    USE_PROXY = false; // 먼저 직접 연결 시도
 } else if (isDevelopment) {
     API_BASE_URL = API_CONFIGS.development;
 } else {
     API_BASE_URL = API_CONFIGS.production;
 }
 
-console.log(`현재 환경: ${isGitHubPages ? 'GitHub Pages (프록시)' : (isDevelopment ? 'Development' : 'Production')}`);
+console.log(`현재 환경: ${isGitHubPages ? 'GitHub Pages (HTTPS)' : (isDevelopment ? 'Development' : 'Production')}`);
 console.log(`API 서버: ${API_BASE_URL}`);
 console.log(`프록시 사용: ${USE_PROXY}`);
 
@@ -161,7 +161,35 @@ async function unifiedFetch(url, options = {}) {
         return await demoFetch(url);
     }
     
-    // GitHub Pages HTTPS 환경에서는 프록시 사용 필수
+    // GitHub Pages에서 HTTPS 서버 직접 연결 시도
+    if (isGitHubPages && url.includes('https://223.130.129.204:8443')) {
+        try {
+            console.log(`🔐 HTTPS FastAPI 서버 직접 연결 시도: ${url}`);
+            const response = await fetch(url, {
+                ...options,
+                mode: 'cors'
+            });
+            
+            if (response.ok) {
+                console.log('✅ HTTPS FastAPI 서버 연결 성공!');
+                return response;
+            }
+        } catch (error) {
+            console.warn(`❌ HTTPS 직접 연결 실패 (자체 서명 인증서?): ${error.message}`);
+            
+            // 자체 서명 인증서 안내 메시지 표시
+            if (error.message.includes('net::ERR_CERT') || error.message.includes('certificate')) {
+                showSSLCertificateNotice();
+            }
+            
+            console.log('🔄 프록시를 통한 HTTP 서버 연결로 전환...');
+            
+            // HTTPS 실패시 프록시를 통한 HTTP 연결 시도
+            return await proxyFetch(url.replace('https://223.130.129.204:8443', 'http://223.130.129.204:8080'), options);
+        }
+    }
+    
+    // 프록시 사용 환경
     if (USE_PROXY) {
         return await proxyFetch(url, options);
     }
@@ -318,6 +346,57 @@ function showAPIFallbackNotice() {
     document.body.appendChild(noticeDiv);
     
     setTimeout(() => noticeDiv.remove(), 5000);
+}
+
+// SSL 인증서 안내 알림
+function showSSLCertificateNotice() {
+    const noticeDiv = document.createElement('div');
+    noticeDiv.id = 'ssl-cert-notice';
+    noticeDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ffa502;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 13px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        max-width: 650px;
+        text-align: center;
+    `;
+    noticeDiv.innerHTML = `
+        <h4 style="margin: 0 0 10px 0;">🔐 SSL 인증서 문제</h4>
+        <p style="margin: 0 0 10px 0;">자체 서명 인증서로 인해 HTTPS 연결이 차단되었습니다.</p>
+        <p style="margin: 0 0 10px 0; font-size: 12px;">
+            <strong>해결방법:</strong> 
+            <a href="https://223.130.129.204:8443" target="_blank" style="color: white; text-decoration: underline;">
+                여기를 클릭</a>하여 인증서를 수동으로 허용하세요.
+        </p>
+        <p style="margin: 0; font-size: 11px;">프록시를 통한 HTTP 연결로 자동 전환됩니다.</p>
+        <button onclick="this.parentElement.remove()" style="
+            margin-top: 10px; 
+            background: rgba(255,255,255,0.2); 
+            border: 1px solid white; 
+            color: white; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            cursor: pointer;
+        ">닫기</button>
+    `;
+    
+    // 기존 알림이 있으면 제거
+    const existing = document.getElementById('ssl-cert-notice');
+    if (existing) existing.remove();
+    
+    document.body.appendChild(noticeDiv);
+    
+    setTimeout(() => {
+        if (noticeDiv.parentNode) noticeDiv.remove();
+    }, 15000);
 }
 
 // 프록시 실패 알림
