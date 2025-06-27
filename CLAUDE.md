@@ -24,3 +24,34 @@
 ## 주의사항
 - 사용자의 간접적 표현 뒤에 숨은 진짜 의도 파악 중요
 - 성급한 변경보다는 맥락 이해 우선
+
+## FastAPI 서버 CORS 설정 필요
+GitHub Pages HTTPS에서 HTTP API 서버 연결을 위해 FastAPI 서버에 아래 코드 추가 필요:
+
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# CORS 설정 - GitHub Pages에서 접근 허용
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://jih4855.github.io",  # GitHub Pages 도메인
+        "http://localhost:3000",      # 로컬 개발용
+        "*"                           # 임시로 모든 도메인 허용
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
+
+# 기존 API 라우트들...
+```
+
+## 프록시 서비스 우선순위
+1. AllOrigins (안정성 높음)
+2. CorsProxy.io 
+3. ThingProxy
+4. CorsAnywhere (제한적)

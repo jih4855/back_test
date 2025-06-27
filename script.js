@@ -24,9 +24,9 @@ let USE_PROXY = false;
 let USE_DEMO_MODE = false;
 
 if (isGitHubPages && isHTTPS) {
-    // GitHub Pages HTTPS 환경 - 대안 프록시 사용 (cors-anywhere 403 에러로 인해)
-    console.log('🌐 GitHub Pages HTTPS 환경 - 대안 프록시 사용');
-    API_BASE_URL = API_CONFIGS.allorigins_proxy;
+    // GitHub Pages HTTPS 환경 - 다양한 프록시 시도
+    console.log('🌐 GitHub Pages HTTPS 환경 - 프록시를 통해 FastAPI 서버 연결 시도');
+    API_BASE_URL = API_CONFIGS.production; // 직접 API 서버 주소 사용
     USE_PROXY = true;
 } else if (isDevelopment) {
     API_BASE_URL = API_CONFIGS.development;
@@ -173,91 +173,103 @@ async function unifiedFetch(url, options = {}) {
     return response;
 }
 
-// CORS 프록시를 통한 fetch
+// 여러 프록시 서비스를 시도하는 향상된 fetch
 async function proxyFetch(url, options = {}) {
-    let finalUrl = url;
-    
-    if (USE_PROXY) {
-        // 대안 프록시 URL 생성 (allorigins 방식)
-        if (url.includes('/positions')) {
-            finalUrl = `${API_CONFIGS.allorigins_proxy}/positions`;
-        } else if (url.includes('/daily-report')) {
-            finalUrl = `${API_CONFIGS.allorigins_proxy}/daily-report`;
-        } else {
-            finalUrl = `${API_CONFIGS.allorigins_proxy}/`;
-        }
-        
-        console.log(`🌐 대안 프록시를 통한 요청: ${finalUrl}`);
+    if (!USE_PROXY) {
+        return await fetch(url, options);
     }
     
+    // 시도할 프록시 서비스들 (순서대로 시도)
+    const proxyServices = [
+        {
+            name: 'AllOrigins',
+            getUrl: (targetUrl) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+        },
+        {
+            name: 'CorsProxy.io', 
+            getUrl: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+        },
+        {
+            name: 'ThingProxy',
+            getUrl: (targetUrl) => `https://thingproxy.freeboard.io/fetch/${targetUrl}`
+        },
+        {
+            name: 'CorsAnywhere',
+            getUrl: (targetUrl) => `https://cors-anywhere.herokuapp.com/${targetUrl}`
+        }
+    ];
+    
+    // 전체 URL 구성
+    let targetUrl = url;
+    if (url.includes('/positions')) {
+        targetUrl = `${API_BASE_URL}/positions`;
+    } else if (url.includes('/daily-report')) {
+        targetUrl = `${API_BASE_URL}/daily-report`;
+    } else {
+        targetUrl = `${API_BASE_URL}/`;
+    }
+    
+    console.log(`🎯 타겟 FastAPI 서버: ${targetUrl}`);
+    
+    // 각 프록시 서비스를 차례로 시도
+    for (let i = 0; i < proxyServices.length; i++) {
+        const proxy = proxyServices[i];
+        const proxyUrl = proxy.getUrl(targetUrl);
+        
+        try {
+            console.log(`🌐 [${i+1}/${proxyServices.length}] ${proxy.name} 프록시 시도: ${proxyUrl}`);
+            
+            const response = await fetch(proxyUrl, {
+                ...options,
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...options.headers
+                },
+                mode: 'cors'
+            });
+            
+            console.log(`📡 ${proxy.name} 응답: ${response.status} ${response.statusText}`);
+            
+            if (response.ok) {
+                console.log(`✅ ${proxy.name} 프록시로 FastAPI 서버 연결 성공!`);
+                return response;
+            } else {
+                console.warn(`❌ ${proxy.name} 실패: ${response.status} ${response.statusText}`);
+            }
+            
+        } catch (error) {
+            console.warn(`❌ ${proxy.name} 에러: ${error.message}`);
+            continue;
+        }
+    }
+    
+    // 모든 프록시 실패
+    console.error('🚫 모든 프록시 서비스 실패 - FastAPI 서버 연결 불가');
+    
+    // FastAPI 서버 직접 연결 마지막 시도 (Mixed Content 경고 발생하지만 시도)
+    console.log('🔄 FastAPI 서버 직접 연결 마지막 시도...');
     try {
-        const response = await fetch(finalUrl, {
+        const directResponse = await fetch(targetUrl, {
             ...options,
             method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
+            mode: 'cors'
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (directResponse.ok) {
+            console.log('✅ FastAPI 서버 직접 연결 성공!');
+            return directResponse;
         }
-        
-        return response;
-        
-    } catch (error) {
-        console.warn(`프록시 요청 실패: ${error.message}`);
-        
-        if (USE_PROXY) {
-            // 다른 프록시들을 차례로 시도
-            console.log('🔄 다른 프록시 서비스 시도 중...');
-            
-            const alternativeProxies = [
-                API_CONFIGS.corsproxy_io,
-                API_CONFIGS.thingproxy
-            ];
-            
-            for (const proxyUrl of alternativeProxies) {
-                try {
-                    let altUrl;
-                    if (url.includes('/positions')) {
-                        altUrl = `${proxyUrl}/positions`;
-                    } else if (url.includes('/daily-report')) {
-                        altUrl = `${proxyUrl}/daily-report`;
-                    } else {
-                        altUrl = `${proxyUrl}/`;
-                    }
-                    
-                    console.log(`🌐 대안 프록시 시도: ${altUrl}`);
-                    const response = await fetch(altUrl, {
-                        ...options,
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            ...options.headers
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        console.log('✅ 대안 프록시 성공!');
-                        return response;
-                    }
-                } catch (altError) {
-                    console.warn(`대안 프록시 실패: ${altError.message}`);
-                    continue;
-                }
-            }
-            
-            console.log('🎭 모든 프록시 실패 - 데모 모드로 전환');
-            showProxyFailureNotice();
-            return await demoFetch(url);
-        }
-        
-        throw error;
+    } catch (directError) {
+        console.warn(`❌ 직접 연결 실패: ${directError.message}`);
     }
+    
+    // 최종적으로 데모 모드로 전환
+    console.log('🎭 최종 폴백: 데모 모드로 전환');
+    showProxyFailureNotice();
+    return await demoFetch(url);
 }
 
 // API 폴백 알림
@@ -285,23 +297,51 @@ function showAPIFallbackNotice() {
 // 프록시 실패 알림
 function showProxyFailureNotice() {
     const noticeDiv = document.createElement('div');
+    noticeDiv.id = 'proxy-failure-notice';
     noticeDiv.style.cssText = `
         position: fixed;
         top: 20px;
-        right: 20px;
-        background: #ff9800;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ff6b6b;
         color: white;
-        padding: 12px 16px;
+        padding: 15px 20px;
         border-radius: 8px;
         font-family: monospace;
         font-size: 13px;
         z-index: 10000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        max-width: 600px;
+        text-align: center;
     `;
-    noticeDiv.innerHTML = '⚠️ 프록시 실패, 데모 모드로 전환';
+    noticeDiv.innerHTML = `
+        <h4 style="margin: 0 0 10px 0;">🚫 FastAPI 서버 연결 실패</h4>
+        <p style="margin: 0 0 10px 0;">모든 프록시 서비스를 시도했지만 연결할 수 없습니다.</p>
+        <p style="margin: 0; font-size: 12px;">
+            <strong>해결방법:</strong> 
+            1) FastAPI 서버에 CORS 설정 추가 
+            2) 서버가 실행 중인지 확인 (223.130.129.204:8000)
+        </p>
+        <button onclick="this.parentElement.remove()" style="
+            margin-top: 10px; 
+            background: rgba(255,255,255,0.2); 
+            border: 1px solid white; 
+            color: white; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            cursor: pointer;
+        ">닫기</button>
+    `;
+    
+    // 기존 알림이 있으면 제거
+    const existing = document.getElementById('proxy-failure-notice');
+    if (existing) existing.remove();
+    
     document.body.appendChild(noticeDiv);
     
-    setTimeout(() => noticeDiv.remove(), 5000);
+    setTimeout(() => {
+        if (noticeDiv.parentNode) noticeDiv.remove();
+    }, 10000);
 }
 
 // 데모 모드 표시
@@ -415,6 +455,11 @@ async function testServerConnection() {
 document.addEventListener('DOMContentLoaded', () => {
     // 데모 모드 표시
     showDemoModeIndicator();
+    
+    // GitHub Pages 환경에서 데모 모드 안내
+    if (isGitHubPages && USE_DEMO_MODE) {
+        showGitHubPagesNotice();
+    }
     
     const tradeHistoryTableBody = document.querySelector('#trade-history-table tbody');
     const currentPositionsDiv = document.getElementById('current-positions');
