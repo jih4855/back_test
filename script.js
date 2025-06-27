@@ -4,8 +4,10 @@ const API_CONFIGS = {
     development: 'http://127.0.0.1:8000',
     development2: 'http://localhost:8000',  // 로컬 테스트용
     production: 'http://223.130.129.204:8000',  // 다시 HTTP로 변경
-    cors_proxy: 'https://cors-anywhere.herokuapp.com/http://223.130.129.204:8000',  // CORS 프록시
+    cors_proxy: 'https://cors-anywhere.herokuapp.com/http://223.130.129.204:8000',  // CORS 프록시 (403 에러 발생중)
     allorigins_proxy: 'https://api.allorigins.win/raw?url=http://223.130.129.204:8000',  // 대안 프록시
+    corsproxy_io: 'https://corsproxy.io/?http://223.130.129.204:8000',  // 다른 CORS 프록시
+    thingproxy: 'https://thingproxy.freeboard.io/fetch/http://223.130.129.204:8000',  // 또 다른 프록시
     demo: 'demo'  // 데모 모드
 };
 
@@ -22,9 +24,9 @@ let USE_PROXY = false;
 let USE_DEMO_MODE = false;
 
 if (isGitHubPages && isHTTPS) {
-    // GitHub Pages HTTPS 환경 - CORS 프록시 사용
-    console.log('🌐 GitHub Pages HTTPS 환경 - CORS 프록시 사용');
-    API_BASE_URL = API_CONFIGS.cors_proxy;
+    // GitHub Pages HTTPS 환경 - 대안 프록시 사용 (cors-anywhere 403 에러로 인해)
+    console.log('🌐 GitHub Pages HTTPS 환경 - 대안 프록시 사용');
+    API_BASE_URL = API_CONFIGS.allorigins_proxy;
     USE_PROXY = true;
 } else if (isDevelopment) {
     API_BASE_URL = API_CONFIGS.development;
@@ -176,16 +178,16 @@ async function proxyFetch(url, options = {}) {
     let finalUrl = url;
     
     if (USE_PROXY) {
-        // CORS 프록시 URL 생성
+        // 대안 프록시 URL 생성 (allorigins 방식)
         if (url.includes('/positions')) {
-            finalUrl = `${API_CONFIGS.cors_proxy}/positions`;
+            finalUrl = `${API_CONFIGS.allorigins_proxy}/positions`;
         } else if (url.includes('/daily-report')) {
-            finalUrl = `${API_CONFIGS.cors_proxy}/daily-report`;
+            finalUrl = `${API_CONFIGS.allorigins_proxy}/daily-report`;
         } else {
-            finalUrl = `${API_CONFIGS.cors_proxy}/`;
+            finalUrl = `${API_CONFIGS.allorigins_proxy}/`;
         }
         
-        console.log(`🌐 프록시를 통한 요청: ${finalUrl}`);
+        console.log(`🌐 대안 프록시를 통한 요청: ${finalUrl}`);
     }
     
     try {
@@ -209,7 +211,47 @@ async function proxyFetch(url, options = {}) {
         console.warn(`프록시 요청 실패: ${error.message}`);
         
         if (USE_PROXY) {
-            console.log('🎭 데모 모드로 전환');
+            // 다른 프록시들을 차례로 시도
+            console.log('🔄 다른 프록시 서비스 시도 중...');
+            
+            const alternativeProxies = [
+                API_CONFIGS.corsproxy_io,
+                API_CONFIGS.thingproxy
+            ];
+            
+            for (const proxyUrl of alternativeProxies) {
+                try {
+                    let altUrl;
+                    if (url.includes('/positions')) {
+                        altUrl = `${proxyUrl}/positions`;
+                    } else if (url.includes('/daily-report')) {
+                        altUrl = `${proxyUrl}/daily-report`;
+                    } else {
+                        altUrl = `${proxyUrl}/`;
+                    }
+                    
+                    console.log(`🌐 대안 프록시 시도: ${altUrl}`);
+                    const response = await fetch(altUrl, {
+                        ...options,
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            ...options.headers
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        console.log('✅ 대안 프록시 성공!');
+                        return response;
+                    }
+                } catch (altError) {
+                    console.warn(`대안 프록시 실패: ${altError.message}`);
+                    continue;
+                }
+            }
+            
+            console.log('🎭 모든 프록시 실패 - 데모 모드로 전환');
             showProxyFailureNotice();
             return await demoFetch(url);
         }
