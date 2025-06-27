@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아이콘 버전 비교</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .version-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #252525;
+            border-radius: 12px;
+            border-left: 4px solid #00d4ff;
+        }
+
+        .version-title {
+            color: #00d4ff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .nav-example {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            background: #333;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: #444;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+        }
+
+        .icon {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .emoji-icon {
+            font-size: 1.2rem;
+        }
+
+        .text-icon {
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .symbol-icon {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .pros, .cons {
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .pros {
+            background: rgba(0, 255, 136, 0.1);
+            border-left: 3px solid #00ff88;
+        }
+
+        .cons {
+            background: rgba(255, 71, 87, 0.1);
+            border-left: 3px solid #ff4757;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 아이콘 버전 비교</h1>
+
+    <!-- 현재 이모지 버전 -->
+    <div class="version-container">
+        <div class="version-title">1. 현재 이모지 버전 (추천)</div>
+        <div class="nav-example">
+            <div class="nav-item active">
+                <span class="icon emoji-icon">📊</span>
+                <span>실시간 대시보드</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon emoji-icon">📈</span>
+                <span>백테스트 분석</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon emoji-icon">⚙️</span>
+                <span>시스템 설정</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon emoji-icon">📋</span>
+                <span>거래 로그</span>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <div class="pros">
+                <strong>✅ 장점:</strong><br>
+                • 직관적이고 친근함<br>
+                • 별도 라이브러리 불필요<br>
+                • 빠른 로딩
+            </div>
+            <div class="cons">
+                <strong>❌ 단점:</strong><br>
+                • 플랫폼별 디자인 차이<br>
+                • 비즈니스용으론 캐주얼할 수 있음
+            </div>
+        </div>
+    </div>
+
+    <!-- Font Awesome 버전 -->
+    <div class="version-container">
+        <div class="version-title">2. Font Awesome 아이콘</div>
+        <div class="nav-example">
+            <div class="nav-item active">
+                <span class="icon"><i class="fas fa-chart-line"></i></span>
+                <span>실시간 대시보드</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon"><i class="fas fa-chart-bar"></i></span>
+                <span>백테스트 분석</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon"><i class="fas fa-cog"></i></span>
+                <span>시스템 설정</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon"><i class="fas fa-list-alt"></i></span>
+                <span>거래 로그</span>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <div class="pros">
+                <strong>✅ 장점:</strong><br>
+                • 전문적이고 일관된 디자인<br>
+                • 많은 아이콘 선택지<br>
+                • 상업적 사용 안전
+            </div>
+            <div class="cons">
+                <strong>❌ 단점:</strong><br>
+                • 외부 라이브러리 필요<br>
+                • 번들 크기 증가
+            </div>
+        </div>
+    </div>
+
+    <!-- 텍스트 기반 버전 -->
+    <div class="version-container">
+        <div class="version-title">3. 텍스트 기반 아이콘</div>
+        <div class="nav-example">
+            <div class="nav-item active">
+                <span class="icon text-icon">[D]</span>
+                <span>실시간 대시보드</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon text-icon">[B]</span>
+                <span>백테스트 분석</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon text-icon">[S]</span>
+                <span>시스템 설정</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon text-icon">[L]</span>
+                <span>거래 로그</span>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <div class="pros">
+                <strong>✅ 장점:</strong><br>
+                • 극도로 빠른 로딩<br>
+                • 모든 환경에서 동일<br>
+                • 미니멀한 디자인
+            </div>
+            <div class="cons">
+                <strong>❌ 단점:</strong><br>
+                • 직관성 떨어짐<br>
+                • 시각적 매력 부족
+            </div>
+        </div>
+    </div>
+
+    <!-- 심볼/기호 버전 -->
+    <div class="version-container">
+        <div class="version-title">4. 심볼/기호 버전</div>
+        <div class="nav-example">
+            <div class="nav-item active">
+                <span class="icon symbol-icon">◆</span>
+                <span>실시간 대시보드</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon symbol-icon">▲</span>
+                <span>백테스트 분석</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon symbol-icon">●</span>
+                <span>시스템 설정</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon symbol-icon">■</span>
+                <span>거래 로그</span>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <div class="pros">
+                <strong>✅ 장점:</strong><br>
+                • 깔끔하고 현대적<br>
+                • 모든 환경에서 동일<br>
+                • 빠른 로딩
+            </div>
+            <div class="cons">
+                <strong>❌ 단점:</strong><br>
+                • 의미 파악 어려움<br>
+                • 학습 필요
+            </div>
+        </div>
+    </div>
+
+    <!-- 혼합 버전 -->
+    <div class="version-container">
+        <div class="version-title">5. 혼합 버전 (이모지 + 심볼)</div>
+        <div class="nav-example">
+            <div class="nav-item active">
+                <span class="icon emoji-icon">📊</span>
+                <span>실시간 대시보드</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon symbol-icon">▲</span>
+                <span>백테스트 분석</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon"><i class="fas fa-cog"></i></span>
+                <span>시스템 설정</span>
+            </div>
+            <div class="nav-item">
+                <span class="icon text-icon">[L]</span>
+                <span>거래 로그</span>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <div class="pros">
+                <strong>✅ 장점:</strong><br>
+                • 상황별 최적 선택<br>
+                • 유연한 디자인<br>
+                • 개성 있음
+            </div>
+            <div class="cons">
+                <strong>❌ 단점:</strong><br>
+                • 일관성 부족<br>
+                • 복잡할 수 있음
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 12px;">
+        <h3 style="color: #00d4ff;">추천: 현재 이모지 버전 유지</h3>
+        <p>개인/소규모 프로젝트에는 이모지가 가장 적합하고, 상업적 사용도 안전합니다!</p>
+    </div>
+</body>
+</html>

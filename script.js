@@ -378,6 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPositionsDiv = document.getElementById('current-positions');
     const positionUpdatedDiv = document.getElementById('position-updated');
     const tradesUpdatedDiv = document.getElementById('trades-updated');
+    const serverTimeSpan = document.getElementById('server-time');
 
     // 시간 포맷 함수
     function formatTime() {
@@ -390,6 +391,17 @@ document.addEventListener('DOMContentLoaded', () => {
             second: '2-digit'
         });
     }
+
+    // 서버 시간 업데이트
+    function updateServerTime() {
+        if (serverTimeSpan) {
+            serverTimeSpan.textContent = new Date().toLocaleTimeString('ko-KR');
+        }
+    }
+
+    // 1초마다 서버 시간 업데이트
+    setInterval(updateServerTime, 1000);
+    updateServerTime();
 
     // 현재 포지션 조회 (수정된 부분)
     async function fetchCurrentPositions() {
@@ -405,29 +417,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 포지션 UI 업데이트 (금액 정보 모두 가리기)
+    // 포지션 UI 업데이트 (개선된 버전)
     function updateCurrentPositions(accounts) {
         if (!accounts || accounts.length === 0) {
-            currentPositionsDiv.innerHTML = '<p>등록된 계정이 없습니다.</p>';
+            currentPositionsDiv.innerHTML = '<div class="loading">등록된 계정이 없습니다.</div>';
             return;
         }
 
         let html = '<div class="position-grid">';
+        let totalPositions = 0;
+        let totalUnrealizedPnl = 0;
         
         accounts.forEach(account => {
             html += `<div class="account-card">
-                <h3>🏦 ${account.account_name.toUpperCase()} 계정</h3>`;
+                <h3><i class="fas fa-university"></i> ${account.account_name.toUpperCase()} 계정</h3>`;
             
             if (!account.positions || account.positions.length === 0) {
-                html += '<p class="no-position">현재 포지션 없음</p>';
+                html += '<div class="no-position">현재 포지션 없음</div>';
             } else {
+                totalPositions += account.positions.length;
+                
                 account.positions.forEach(position => {
-                    const sideIcon = position.side === 'long' ? '📈' : '📉';
+                    totalUnrealizedPnl += position.unrealized_pnl || 0;
+                    
+                    const sideIcon = position.side === 'long' ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>';
                     const sideColor = position.side === 'long' ? 'pnl-positive' : 'pnl-negative';
                     const pnlColor = position.unrealized_pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                    const pnlIcon = position.unrealized_pnl >= 0 ? '<i class="fas fa-dollar-sign"></i>' : '<i class="fas fa-minus-circle"></i>';
                     
                     html += `
-                        <div class="position-item">
+                        <div class="position-item ${position.side}">
                             <div class="position-header">
                                 <span class="position-side ${sideColor}">
                                     ${sideIcon} ${position.side.toUpperCase()}
@@ -435,9 +454,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="position-leverage">${position.leverage}x</span>
                             </div>
                             <div class="position-details">
-                                <div class="position-size">사이즈: ${position.size}</div>
+                                <div class="position-size"><i class="fas fa-chart-area"></i> 사이즈: ${position.size}</div>
+                                <div class="position-price"><i class="fas fa-tag"></i> 평균가: $${position.avg_price}</div>
                                 <div class="position-pnl ${pnlColor}">
-                                    수익률: ${position.unrealized_pnl_pct.toFixed(2)}%
+                                    ${pnlIcon} 수익률: ${position.unrealized_pnl_pct.toFixed(2)}%
                                 </div>
                             </div>
                         </div>
@@ -449,6 +469,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         html += '</div>';
+        
+        // 전체 포지션 요약 정보 추가
+        if (totalPositions > 0) {
+            const summaryPnlColor = totalUnrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+            const summaryIcon = totalUnrealizedPnl >= 0 ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
+            
+            html += `
+                <div style="margin-top: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 12px; border-left: 4px solid var(--accent-primary);">
+                    <h4 style="margin: 0 0 8px 0; color: var(--text-primary);"><i class="fas fa-calculator"></i> 포지션 요약</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-layer-group"></i> 총 포지션 수: <strong>${totalPositions}개</strong></span>
+                        <span class="${summaryPnlColor}">${summaryIcon} 총 미실현 손익: $${totalUnrealizedPnl.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
         currentPositionsDiv.innerHTML = html;
     }
 
@@ -470,9 +507,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const separatorRow = document.createElement('tr');
                 separatorRow.innerHTML = `
                     <td colspan="8" class="account-header-row">
-                        <strong>🏦 ${account.name.toUpperCase()} 계정</strong> | 
-                        총 ${account.total_trades}건 거래 | 
-                        승률 ${account.win_rate}%
+                        <strong><i class="fas fa-university"></i> ${account.name.toUpperCase()} 계정</strong> | 
+                        <i class="fas fa-hashtag"></i> 총 ${account.total_trades}건 거래 | 
+                        <i class="fas fa-trophy"></i> 승률 ${account.win_rate}%
                     </td>
                 `;
                 tradeHistoryTableBody.appendChild(separatorRow);
@@ -485,19 +522,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                // 상세 거래 내역 (금액 정보 제거)
-                account.detailed_trades.forEach(trade => {
+                // 상세 거래 내역 (개선된 버전)
+                account.detailed_trades.forEach((trade) => {
                     const row = document.createElement('tr');
                     const pnlClass = trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-                    const directionIcon = trade.direction === 'long' ? '📈' : '📉';
+                    const directionIcon = trade.direction === 'long' ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>';
+                    const resultIcon = trade.pnl >= 0 ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
+                    
+                    // 거래 시간을 더 읽기 쉽게 포맷
+                    const timeDisplay = `${trade.open_time} → ${trade.close_time}`;
 
                     row.innerHTML = `
-                        <td>${trade.open_time} ~ ${trade.close_time}</td>
-                        <td><strong>${trade.symbol}</strong></td>
-                        <td>${directionIcon} ${trade.direction.toUpperCase()}</td>
-                        <td>${trade.leverage}x</td>
-                        <td class="${pnlClass}"><strong>${trade.pnl_ratio.toFixed(2)}%</strong></td>
+                        <td style="font-family: monospace; font-size: 0.9rem;">${timeDisplay}</td>
+                        <td><strong style="color: var(--accent-primary);">${trade.symbol}</strong></td>
+                        <td><span style="font-weight: 600;">${directionIcon} ${trade.direction.toUpperCase()}</span></td>
+                        <td><span style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-weight: 600;">${trade.leverage}x</span></td>
+                        <td class="${pnlClass}">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                <span>${resultIcon}</span>
+                                <strong>${trade.pnl_ratio.toFixed(2)}%</strong>
+                            </div>
+                        </td>
                     `;
+                    
+                    // 호버 효과를 위한 이벤트 리스너
+                    row.addEventListener('mouseenter', () => {
+                        row.style.transform = 'scale(1.01)';
+                        row.style.boxShadow = '0 4px 12px rgba(0, 212, 255, 0.1)';
+                    });
+                    
+                    row.addEventListener('mouseleave', () => {
+                        row.style.transform = 'scale(1)';
+                        row.style.boxShadow = 'none';
+                    });
+                    
                     tradeHistoryTableBody.appendChild(row);
                 });
             });
