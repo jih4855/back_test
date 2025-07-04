@@ -21,16 +21,8 @@ let API_BASE_URL;
 let USE_PROXY = false;
 let USE_DEMO_MODE = false;
 
-if (isGitHubPages && isHTTPS) {
-    // GitHub Pages HTTPS 환경 - HTTPS API 서버 직접 연결 시도
-    console.log('🔐 GitHub Pages HTTPS 환경 - HTTPS FastAPI 서버 직접 연결');
-    API_BASE_URL = API_CONFIGS.production_https; // 8443 HTTPS 서버 사용
-    USE_PROXY = false; // 먼저 직접 연결 시도
-} else if (isDevelopment) {
-    API_BASE_URL = API_CONFIGS.development;
-} else {
-    API_BASE_URL = API_CONFIGS.production;
-}
+// [추가] 모든 환경에서 Cloudtype FastAPI 서버로 강제 연결
+API_BASE_URL = 'https://port-0-new-llm-coin-m47ujor8ea8a318c.sel4.cloudtype.app'; // 항상 이 주소로 연결
 
 console.log(`현재 환경: ${isGitHubPages ? 'GitHub Pages (HTTPS)' : (isDevelopment ? 'Development' : 'Production')}`);
 console.log(`API 서버: ${API_BASE_URL}`);
