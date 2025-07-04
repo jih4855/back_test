@@ -55,3 +55,27 @@ app.add_middleware(
 2. CorsProxy.io 
 3. ThingProxy
 4. CorsAnywhere (제한적)
+
+## 다음 작업 예정 (저녁에)
+### Cloudflare Tunnel로 HTTPS 적용
+1. **위치**: new_llm_coin 폴더 (FastAPI 서버 있는 곳)
+2. **작업 순서**:
+   - cloudflared 설치 및 터널 생성
+   - FastAPI 서버 CORS 설정 추가
+   - 새 HTTPS URL로 프론트엔드 연결
+   - 영구 터널 설정 (선택적)
+
+### FastAPI 서버 수정 필요사항
+```python
+# CORS 미들웨어 추가
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # GitHub Pages 허용
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+### 예상 작업 시간: 10-15분

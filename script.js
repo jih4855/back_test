@@ -1,10 +1,7 @@
 // 암호화폐 자동매매 대시보드 JavaScript
 // 환경별 API 서버 주소 설정
 const API_CONFIGS = {
-    development: 'http://127.0.0.1:8080',
-    development2: 'http://localhost:8080',  // 로컬 테스트용
-    production: 'http://223.130.129.204:8080',  // HTTP 서버
-    production_https: 'https://223.130.129.204:8443',  // HTTPS 서버 (8443 포트에서 실행 중인 것 같음)
+    production_https: 'https://port-0-new-llm-coin-m47ujor8ea8a318c.sel4.cloudtype.app',  // HTTPS 서버 (8443 포트에서 실행 중인 것 같음)
     cors_proxy: 'https://cors-anywhere.herokuapp.com/http://223.130.129.204:8080',  // CORS 프록시
     allorigins_proxy: 'https://api.allorigins.win/raw?url=http://223.130.129.204:8080',  // 대안 프록시
     corsproxy_io: 'https://corsproxy.io/?http://223.130.129.204:8080',  // 다른 CORS 프록시
