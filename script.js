@@ -24,6 +24,9 @@ let USE_DEMO_MODE = false;
 // [추가] 모든 환경에서 Cloudtype FastAPI 서버로 강제 연결
 API_BASE_URL = 'https://port-0-new-llm-coin-m47ujor8ea8a318c.sel4.cloudtype.app'; // 항상 이 주소로 연결
 
+// 🔒 API 인증 키 (보안 강화)
+const API_KEY = 'default_secure_key_2024';
+
 console.log(`현재 환경: ${isGitHubPages ? 'GitHub Pages (HTTPS)' : (isDevelopment ? 'Development' : 'Production')}`);
 console.log(`API 서버: ${API_BASE_URL}`);
 console.log(`프록시 사용: ${USE_PROXY}`);
@@ -156,7 +159,13 @@ async function unifiedFetch(url, options = {}) {
             console.log(`🔐 Cloudtype FastAPI 서버 직접 연결 시도: ${url}`);
             const response = await fetch(url, {
                 ...options,
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'X-API-Key': API_KEY,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
             });
             
             if (response.ok) {
@@ -182,7 +191,13 @@ async function unifiedFetch(url, options = {}) {
     // 로컬 개발 환경에서만 직접 호출
     const response = await fetch(url, {
         ...options,
-        mode: 'cors'
+        mode: 'cors',
+        headers: {
+            'X-API-Key': API_KEY,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
     });
     
     if (!response.ok) {
@@ -520,7 +535,12 @@ async function testServerConnection() {
         const response = await fetch(`${API_BASE_URL}/`, {
             method: 'GET',
             mode: 'cors',
-            signal: controller.signal
+            signal: controller.signal,
+            headers: {
+                'X-API-Key': API_KEY,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
         });
         
         clearTimeout(timeoutId);
