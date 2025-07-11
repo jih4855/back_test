@@ -1,98 +1,357 @@
-/* No CSS Club Style - Keep it minimal */
+/* 🤖 ChatGPT/Gemini 스타일 트레이딩 다크모드 */
+
+:root {
+    /* 차분한 트레이딩 컬러 팔레트 */
+    --bg-primary: #1a1a1a;      /* 메인 배경 */
+    --bg-secondary: #2d2d2d;    /* 카드/섹션 배경 */
+    --bg-tertiary: #363636;     /* 호버/액티브 */
+    --border: #404040;          /* 테두리 */
+    --text-primary: #e8e8e8;    /* 주요 텍스트 */
+    --text-secondary: #b8b8b8;  /* 보조 텍스트 */
+    --text-muted: #888888;      /* 약한 텍스트 */
+    --accent-primary: #10a37f;  /* ChatGPT 그린 (차분) */
+    --accent-secondary: #0d7a63; /* 어두운 그린 */
+    --profit: #22c55e;          /* 수익 색상 */
+    --loss: #ef4444;            /* 손실 색상 */
+    --warning: #f59e0b;         /* 경고 색상 */
+    --shadow: rgba(0, 0, 0, 0.3);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
 body {
-    font-family: monospace; /* Monospaced font for a classic terminal look */
-    margin: 20px;
-    background-color: #f4f4f4; /* Light gray background */
-    color: #333; /* Dark gray text */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 14px;
+    overflow-x: hidden;
 }
 
-header, section, footer {
-    margin-bottom: 20px;
+/* 🎯 헤더 스타일 */
+header {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 10px var(--shadow);
 }
 
-h1, h2 {
-    margin-top: 0;
+h1 {
+    font-size: 28px;
+    font-weight: 600;
+    background: linear-gradient(90deg, var(--accent-primary), var(--text-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 400;
+}
+
+/* 📊 메인 컨테이너 */
+main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    gap: 24px;
+}
+
+/* 🃏 카드 스타일 */
+section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: all 0.2s ease;
+}
+
+section:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 4px 16px var(--shadow);
+}
+
+h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+h2 i {
+    color: var(--accent-primary);
+}
+
+/* 📈 포지션 그리드 */
+.position-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.account-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.2s ease;
+}
+
+.account-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.account-card h3 {
+    color: var(--accent-primary);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.no-position {
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.position-item {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.position-item:hover {
+    border-color: var(--accent-primary);
+    transform: scale(1.02);
+}
+
+.position-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.position-side {
+    font-weight: 600;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.position-side.pnl-positive {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--profit);
+    border: 1px solid var(--profit);
+}
+
+.position-side.pnl-negative {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--loss);
+    border: 1px solid var(--loss);
+}
+
+.position-leverage {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.position-details {
+    display: grid;
+    gap: 8px;
+}
+
+.position-details > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.position-details i {
+    width: 14px;
+    color: var(--accent-primary);
+}
+
+/* 📋 테이블 스타일 */
+.table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
 }
 
 table {
     width: 100%;
-    border-collapse: collapse; /* Remove double borders */
-    margin-top: 10px;
+    border-collapse: collapse;
+    background: var(--bg-tertiary);
 }
 
-th, td {
-    border: 1px solid #ccc; /* Light gray border for table cells */
-    padding: 8px;
+th {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-weight: 600;
+    padding: 16px 12px;
     text-align: left;
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
 }
 
-thead {
-    background-color: #e0e0e0; /* Slightly darker gray for table header */
+td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 13px;
 }
 
-hr {
-    border: 0;
-    border-top: 1px solid #ccc;
-    margin: 20px 0;
+tr:hover {
+    background: var(--bg-secondary);
+    transform: scale(1.01);
+    transition: all 0.1s ease;
 }
 
-#current-positions p,
-#trade-history tbody tr:empty { /* Style for loading messages or empty states */
-    font-style: italic;
-    color: #777;
+.account-header-row {
+    background: var(--bg-primary) !important;
+    font-weight: 600;
+    color: var(--accent-primary) !important;
 }
 
-/* Basic link styling if any links are added */
-a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-/* 계정 구분용 테이블 행 */
 .account-header-row td {
-    background-color: #dcdcdc;
-    font-weight: bold;
-    font-family: monospace;
-    color: #222;
+    padding: 16px 12px;
+    border-top: 2px solid var(--accent-primary);
 }
 
-/* 손익 색상 강조 */
+/* 💰 수익/손실 색상 */
 .pnl-positive {
-    color: #008000; /* 진녹색 */
-    font-weight: bold;
+    color: var(--profit) !important;
+    font-weight: 600;
 }
+
 .pnl-negative {
-    color: #cc0000; /* 붉은색 */
-    font-weight: bold;
+    color: var(--loss) !important;
+    font-weight: 600;
 }
 
-/* 현재 포지션 영역 개선 */
-#current-positions ul {
-    list-style-type: none;
-    padding-left: 0;
+/* ⏰ 상태 정보 */
+.status-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-tertiary);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
 }
-#current-positions li {
-    margin-bottom: 12px;
-    background: #fff;
-    padding: 10px;
-    border-left: 4px solid #999;
+
+.server-time {
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+
+/* 🔄 로딩 상태 */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.loading::before {
+    content: "⏳ ";
+    margin-right: 8px;
+}
+
+/* 📱 반응형 디자인 */
+@media (max-width: 768px) {
+    main {
+        padding: 16px;
+        gap: 16px;
+    }
+    
+    section {
+        padding: 16px;
+    }
+    
+    h1 {
+        font-size: 24px;
+    }
+    
+    .position-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-container {
+        font-size: 12px;
+    }
+    
+    th, td {
+        padding: 8px 6px;
+    }
+}
+
+/* 🎨 스크롤바 커스텀 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
     border-radius: 4px;
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.05);
-}
-#current-positions h3 {
-    margin-bottom: 10px;
 }
 
-/* 모바일 대응 살짝 */
-@media screen and (max-width: 768px) {
-    table, thead, tbody, th, td, tr {
-        font-size: 13px;
-    }
-    h1, h2 {
-        font-size: 18px;
-    }
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
+/* ✨ 애니메이션 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+section {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* 🚨 알림 스타일 개선 */
+.notice {
+    border-radius: 8px !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border) !important;
 }
