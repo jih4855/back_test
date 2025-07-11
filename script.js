@@ -150,71 +150,25 @@ async function unifiedFetch(url, options = {}) {
         return await demoFetch(url);
     }
     
-    // GitHub Pages에서 HTTPS 서버 직접 연결 시도
-    if (isGitHubPages && url.includes('https://223.130.129.204:8443')) {
+    // Cloudtype HTTPS 서버 직접 연결 (GitHub Pages 환경)
+    if (isGitHubPages && url.includes('https://port-0-new-llm-coin-m47ujor8ea8a318c.sel4.cloudtype.app')) {
         try {
-            console.log(`🔐 HTTPS FastAPI 서버 직접 연결 시도: ${url}`);
+            console.log(`🔐 Cloudtype FastAPI 서버 직접 연결 시도: ${url}`);
             const response = await fetch(url, {
                 ...options,
                 mode: 'cors'
             });
             
             if (response.ok) {
-                console.log('✅ HTTPS FastAPI 서버 연결 성공!');
+                console.log('✅ Cloudtype FastAPI 서버 연결 성공!');
                 return response;
+            } else {
+                console.warn(`❌ Cloudtype 서버 응답 오류: ${response.status} ${response.statusText}`);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
         } catch (error) {
-            console.warn(`❌ HTTPS 직접 연결 실패 (자체 서명 인증서?): ${error.message}`);
-            
-            // 자체 서명 인증서 안내 메시지 표시
-            if (error.message.includes('net::ERR_CERT') || error.message.includes('certificate')) {
-                showSSLCertificateNotice();
-            }
-            
-            console.log('🔄 프록시를 통한 HTTP 서버 연결로 전환...');
-            
-            // HTTPS 실패시 프록시를 통한 HTTP 연결 시도
-            const httpUrl = url.replace('https://223.130.129.204:8443', 'http://223.130.129.204:8080');
-            
-            // 프록시 서비스들을 직접 시도
-            const proxyServices = [
-                {
-                    name: 'AllOrigins',
-                    getUrl: (targetUrl) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
-                },
-                {
-                    name: 'CorsProxy.io', 
-                    getUrl: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
-                },
-                {
-                    name: 'ThingProxy',
-                    getUrl: (targetUrl) => `https://thingproxy.freeboard.io/fetch/${targetUrl}`
-                }
-            ];
-            
-            for (const proxy of proxyServices) {
-                try {
-                    const proxyUrl = proxy.getUrl(httpUrl);
-                    console.log(`🌐 ${proxy.name} 프록시 시도: ${proxyUrl}`);
-                    
-                    const proxyResponse = await fetch(proxyUrl, {
-                        ...options,
-                        method: 'GET',
-                        mode: 'cors'
-                    });
-                    
-                    if (proxyResponse.ok) {
-                        console.log(`✅ ${proxy.name} 프록시 성공!`);
-                        return proxyResponse;
-                    }
-                } catch (proxyError) {
-                    console.warn(`❌ ${proxy.name} 실패: ${proxyError.message}`);
-                    continue;
-                }
-            }
-            
-            // 모든 프록시 실패시 데모 모드
-            console.log('🎭 모든 연결 실패 - 데모 모드로 전환');
+            console.error(`❌ Cloudtype 서버 연결 실패: ${error.message}`);
+            console.log('🎭 데모 모드로 전환');
             showProxyFailureNotice();
             return await demoFetch(url);
         }
