@@ -55,8 +55,8 @@ function generateDemoData() {
                         avg_price: 144.78,
                         leverage: 50,
                         notional_usd: 31.85,
-                        unrealized_pnl: 0,
-                        unrealized_pnl_pct: 0
+                        unrealized_pnl: 0.15,
+                        unrealized_pnl_pct: 0.69
                     }
                 ]
             },
@@ -654,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="position-size"><i class="fas fa-chart-area"></i> 사이즈: ${position.size}</div>
                                 <div class="position-price"><i class="fas fa-tag"></i> 평균가: $${position.avg_price}</div>
                                 <div class="position-pnl ${pnlColor}">
-                                    ${pnlIcon} 수익률: xx%
+                                    ${pnlIcon} 수익률: ${position.unrealized_pnl_pct.toFixed(2)}%
                                 </div>
                             </div>
                         </div>
@@ -667,17 +667,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         html += '</div>';
         
-        // 전체 포지션 요약 정보 추가
+        // 전체 포지션 요약 정보 추가 (수익금 정보 제외)
         if (totalPositions > 0) {
-            const summaryPnlColor = totalUnrealizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-            const summaryIcon = totalUnrealizedPnl >= 0 ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
-            
             html += `
                 <div style="margin-top: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 12px; border-left: 4px solid var(--accent-primary);">
                     <h4 style="margin: 0 0 8px 0; color: var(--text-primary);"><i class="fas fa-calculator"></i> 포지션 요약</h4>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; justify-content: center; align-items: center;">
                         <span><i class="fas fa-layer-group"></i> 총 포지션 수: <strong>${totalPositions}개</strong></span>
-                        <span class="${summaryPnlColor}">${summaryIcon} 총 미실현 손익: $xx.xx</span>
                     </div>
                 </div>
             `;
