@@ -21,8 +21,12 @@ let API_BASE_URL;
 let USE_PROXY = false;
 let USE_DEMO_MODE = false;
 
-// [추가] 모든 환경에서 Cloudtype FastAPI 서버로 강제 연결
-API_BASE_URL = 'https://port-0-new-llm-coin-m47ujor8ea8a318c.sel4.cloudtype.app'; // 항상 이 주소로 연결
+// 환경별 API 서버 설정
+if (isDevelopment) {
+    API_BASE_URL = 'http://localhost:8000'; // 로컬 개발용
+} else {
+    API_BASE_URL = 'https://port-0-new-llm-coin-m47ujor8ea8a318c.sel4.cloudtype.app'; // 실제 서비스용 (Cloudtype)
+}
 
 // 🔒 API 인증 키 (보안 강화)
 const API_KEY = 'default_secure_key_2024';
